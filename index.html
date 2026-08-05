@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Free-Stack HQ — Command Center</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5e6ad2">
+<style>
+:root{
+  --canvas:#010102; --surface-1:#0f1011; --surface-2:#141516; --surface-3:#18191a;
+  --ink:#f7f8f8; --ink-muted:#d0d6e0; --ink-subtle:#8a8f98; --ink-tertiary:#62666d;
+  --hairline:#23252a; --hairline-strong:#34343a;
+  --accent:#5e6ad2; --accent-hover:#828fff; --success:#27a644; --warn:#f5a623; --error:#ee4040;
+  --font:'Inter',system-ui,-apple-system,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--canvas);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.6;min-height:100vh}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+/* header */
+.hd{display:flex;align-items:center;gap:20px;padding:26px 0 18px;border-bottom:1px solid var(--hairline);flex-wrap:wrap}
+.hd h1{font-size:26px;font-weight:600;letter-spacing:-0.03em}
+.hd h1 .dot{color:var(--accent)}
+.hd .sub{font-family:var(--mono);font-size:11px;color:var(--ink-subtle);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px}
+.clock{margin-left:auto;text-align:right}
+.clock .t{font-family:var(--mono);font-size:22px;color:var(--accent);letter-spacing:-0.02em}
+.clock .l{font-family:var(--mono);font-size:10px;color:var(--ink-tertiary);letter-spacing:2px;text-transform:uppercase}
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;padding:20px 0}
+.stat{border:1px solid var(--hairline);background:var(--surface-1);padding:14px 16px;border-radius:8px}
+.stat b{display:block;font-size:20px;font-weight:600;letter-spacing:-0.02em}
+.stat span{font-family:var(--mono);font-size:10px;color:var(--ink-subtle);letter-spacing:1.5px;text-transform:uppercase}
+.stat.ok b{color:var(--success)} .stat.warn b{color:var(--warn)} .stat.down b{color:var(--error)}
+/* section headers */
+.sec{display:flex;align-items:center;gap:12px;margin:30px 0 14px}
+.sec h2{font-size:14px;font-weight:600;letter-spacing:-0.01em}
+.sec .tag{font-family:var(--mono);font-size:10px;color:var(--accent);letter-spacing:1.5px;text-transform:uppercase}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--hairline),transparent)}
+/* health grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.card{border:1px solid var(--hairline);background:var(--surface-1);padding:12px 14px;border-radius:8px;display:flex;align-items:center;gap:10px}
+.card .st{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.card .st.up{background:var(--success)} .card .st.flaky{background:var(--warn)} .card .st.down{background:var(--error)} .card .st.none{background:var(--ink-tertiary)}
+.card .nm{font-weight:500;font-size:13px}
+.card .cd{font-family:var(--mono);font-size:10px;color:var(--ink-subtle)}
+.card .cd b{color:var(--ink-muted)}
+/* roster table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:var(--mono);font-size:10px;color:var(--ink-subtle);letter-spacing:1.5px;text-transform:uppercase;text-align:left;padding:8px 10px;border-bottom:1px solid var(--hairline-strong)}
+td{padding:8px 10px;border-bottom:1px solid var(--hairline);vertical-align:top}
+td.n{font-weight:500;white-space:nowrap}
+td.d{color:var(--ink-muted)}
+td.s{font-family:var(--mono);font-size:10px;white-space:nowrap}
+.badge{display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 7px;border-radius:3px;border:1px solid var(--hairline-strong)}
+.badge.ok{color:var(--success);border-color:var(--success)} .badge.sig{color:var(--accent);border-color:var(--accent)}
+.badge.q{color:var(--warn);border-color:var(--warn)} .badge.dn{color:var(--ink-tertiary)}
+/* queue */
+.que{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.qitem{display:flex;align-items:flex-start;gap:10px;border:1px solid var(--hairline);background:var(--surface-1);padding:12px 14px;border-radius:8px}
+.qitem input{margin-top:3px;accent-color:var(--accent)}
+.qitem b{font-size:13px;display:block}
+.qitem p{font-size:11px;color:var(--ink-subtle);line-height:1.5}
+.qitem.done{opacity:.45}
+footer{margin:50px 0 40px;border-top:1px solid var(--hairline);padding-top:20px;font-family:var(--mono);font-size:10px;color:var(--ink-tertiary);letter-spacing:1px;text-transform:uppercase;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media(max-width:640px){.clock{margin-left:0}.hd{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hd">
+    <div>
+      <h1>FREE-STACK<span class="dot">.</span>HQ</h1>
+      <div class="sub">Command center — free credits, engines, lanes</div>
+    </div>
+    <div class="clock"><div class="l">shift deadline 11:00</div><div class="t" id="clock">--:--:--</div></div>
+  </header>
+
+  <section class="stats">
+    <div class="stat" id="st-lanes"><b>0</b><span>provider lanes</span></div>
+    <div class="stat" id="st-up"><b>0</b><span>healthy now</span></div>
+    <div class="stat" id="st-sig"><b>0</b><span>signup queue</span></div>
+    <div class="stat" id="st-wired"><b>0</b><span>wired / vaulted</span></div>
+  </section>
+
+  <div class="sec"><h2>PROVIDER HEALTH</h2><span class="tag">live probe</span></div>
+  <div class="grid" id="health"><div class="card"><span class="st none"></span><div><div class="nm">loading…</div></div></div></div>
+
+  <div class="sec"><h2>SIGNUP QUEUE</h2><span class="tag">check off as claimed</span></div>
+  <div class="que" id="queue"></div>
+
+  <div class="sec"><h2>ROSTER</h2><span class="tag">master inventory</span></div>
+  <div class="grid" id="roster"></div>
+
+  <footer>
+    <span>Free-Stack HQ · built 2026-08-05 overnight shift</span>
+    <span>health.json · roster · vault</span>
+  </footer>
+</div>
+
+<script>
+const ROSTER = [
+  {n:'Puter (puterai)', d:'FREE unlimited: claude-opus-4.7, gpt-5.4-nano, gemini-2.5-flash, minimax-m2.7 — OpenAI-compat endpoint', s:'WIRED', b:'ok'},
+  {n:'freemodel.dev', d:'Free frontier-class proxy (Claude Opus via model-swap) — clawd backend', s:'WIRED', b:'ok'},
+  {n:'Mistral', d:'1 BILLION tokens/mo, no card — biggest free volume anywhere', s:'SIGNUP', b:'sig'},
+  {n:'EvoMap API Grant', d:'GitHub-repo credits: Bronze 500 / Silver 2K / Gold 10K (OpenAI/Anthropic/Google)', s:'SIGNUP', b:'sig'},
+  {n:'Keelcode.ai', d:'Free daily credits, Anthropic-compatible; open track has kimi-k3', s:'SIGNUP', b:'sig'},
+  {n:'completions.me', d:'"Free · Unlimited · No card" — Claude Opus 4.6 / GPT-5.2 / Gemini 3.1 Pro +15', s:'PROBE', b:'q'},
+  {n:'noobkeys', d:'Free Claude proxy (Opus/Sonnet/Haiku), OpenAI-compatible', s:'PROBE', b:'q'},
+  {n:'SambaNova', d:'Meta-Llama-3.3-70B free tier (content-filter heavy)', s:'WIRED', b:'ok'},
+  {n:'Cerebras', d:'1M tok/day (gpt-oss-120b on our key)', s:'WIRED', b:'ok'},
+  {n:'DeepSeek', d:'Paid overflow lane ($9.31 balance)', s:'WIRED', b:'ok'},
+  {n:'NVIDIA NIM', d:'nvapi- free credits (llama/qwen on NIM)', s:'WIRED', b:'ok'},
+  {n:'Cloudflare Workers AI', d:'10K neurons/day incl. kimi-k2.6 (needs Account ID)', s:'WIRED', b:'ok'},
+  {n:'Groq', d:'14.4K req/day + free Whisper STT + TTS', s:'WIRED', b:'ok'},
+  {n:'Gemini (Google)', d:'3 Flash 10K req/day — geo-dependent (US 429 risk)', s:'TEST', b:'q'},
+  {n:'Qwen / DashScope', d:'70M free tokens (China)', s:'SIGNUP', b:'sig'},
+  {n:'Z.ai GLM-5.2', d:'Free Flash tiers + GLM-5.2 (744B, 1M ctx, MIT)', s:'SIGNUP', b:'sig'},
+  {n:'Ollama Cloud', d:'$0 free tier, OpenAI-compatible', s:'SIGNUP', b:'sig'},
+  {n:'LLM7.io', d:'Free DeepSeek R1 etc, 30 RPM — API live', s:'PROBE', b:'q'},
+  {n:'Deepgram', d:'$200 credit (no card)', s:'WIRED', b:'ok'},
+  {n:'AssemblyAI', d:'$50 credit', s:'WIRED', b:'ok'},
+  {n:'Modal', d:'$30/mo credit — CLI wired', s:'WIRED', b:'ok'},
+  {n:'Thunder', d:'$20/mo credit', s:'WIRED', b:'ok'},
+  {n:'AMD Dev Cloud', d:'$100 MI300X credits', s:'SIGNUP', b:'sig'},
+  {n:'Kamatera', d:'$100/30-day VPS, NO CARD — Tim\'s pick for tomorrow', s:'TOMORROW', b:'sig'},
+  {n:'freevps.info', d:'200-day free VPS, full root, 4GB NVMe', s:'SIGNUP', b:'sig'},
+  {n:'Hetzner CX22', d:'~€4/mo — the cheap endgame', s:'PAID', b:'q'},
+  {n:'Kaggle', d:'30h/week free GPU+TPU', s:'WIRED', b:'ok'},
+  {n:'Pollinations', d:'Free image API (no key)', s:'WIRED', b:'ok'},
+  {n:'ZSky', d:'Free 1080p video+audio, web-only', s:'WIRED', b:'ok'},
+  {n:'Comfy Cloud', d:'400 credits/mo', s:'SIGNUP', b:'sig'},
+  {n:'Runway Builders', d:'500K credits (startup)', s:'ENTERPRISE', b:'q'},
+  {n:'Kling AI', d:'Daily free credits (CN)', s:'SIGNUP', b:'sig'},
+  {n:'Pika', d:'~80 credits/mo', s:'SIGNUP', b:'sig'},
+  {n:'Ideogram', d:'Free plan credits', s:'SIGNUP', b:'sig'},
+  {n:'Supabase/Neon/Turso', d:'Free DB tiers (unclaimed)', s:'SIGNUP', b:'sig'},
+  {n:'Resend/SendGrid/Brevo', d:'Free email APIs 100-300/day', s:'SIGNUP', b:'sig'},
+  {n:'LoopX', d:'Local loop-state control plane — INSTALLED 0.4.1', s:'WIRED', b:'ok'},
+  {n:'DeerFlow', d:'79K★ super-agent harness + OAuth bridge (zero-credit frontier)', s:'WIRE', b:'sig'},
+  {n:'PI', d:'84K★ unified LLM API 40+ providers', s:'WIRE', b:'sig'},
+  {n:'ChunkHound', d:'Keyless codebase intelligence', s:'WIRE', b:'sig'},
+];
+const QUEUE = [
+  {n:'Mistral', d:'console.mistral.ai/api-keys → vault "mistral" (farm lane pre-wired)'},
+  {n:'completions.me', d:'Grab free key → test longevity → farm/Claude Code backend'},
+  {n:'EvoMap API Grant', d:'evomap.ai/api-grant (use DIRECT url — wrapper sites are bait)'},
+  {n:'Keelcode.ai', d:'Free daily credits; open track includes kimi-k3'},
+  {n:'Puter full sweep', d:'Token vaulted — sweep remaining models + check limits'},
+  {n:'Qwen 70M', d:'alibabacloud.com/model-studio — China lane'},
+  {n:'Cloudflare Account ID', d:'Sidebar grab (5s) → unlocks kimi-k2.6 Workers AI'},
+  {n:'Moonshot recharge', d:'kimi-k3 is on the account, balance is 0 — recharge to light it'},
+  {n:'Kamatera', d:'$100/30d VPS, no card — Tim\'s pick'},
+  {n:'Card-limit clicks', d:'CARD-LIMITS.md — 10 dashboards, 5-10 min'},
+];
+const healthUrl = 'health.json';
+let health = null;
+
+// clock: T-minus to 11:00, read from real system time (fetched each minute)
+function tick(){
+  const n = new Date();
+  const dl = new Date(n); dl.setHours(11,0,0,0);
+  const d = dl - n;
+  const h = Math.floor(d/3600000), m = Math.floor(d%3600000/60000), s = Math.floor(d%60000/1000);
+  document.getElementById('clock').textContent =
+    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+setInterval(tick, 1000); tick();
+
+async function loadHealth(){
+  try{
+    const r = await fetch(healthUrl + '?_t=' + Date.now());
+    health = await r.json();
+  }catch(e){ health = null; }
+  const g = document.getElementById('health');
+  const provs = (health && health.providers) || {};
+  const names = Object.keys(provs).length ? Object.keys(provs) : [];
+  if(!names.length){ g.innerHTML = '<div class="card"><span class="st down"></span><div><div class="nm">health.json missing — run health-probe.py</div></div></div>'; return; }
+  let up = 0, flaky = 0;
+  g.innerHTML = '';
+  for(const k of names){
+    const v = provs[k];
+    let cls = 'none', label = v;
+    if(v === '200'){ cls = 'up'; up++; }
+    else if(v === '000' || v === 'ERR'){ cls = 'flaky'; flaky++; }
+    else if(v === 'NO-KEY'){ cls = 'none'; }
+    else { cls = 'flaky'; flaky++; }
+    g.insertAdjacentHTML('beforeend',
+      `<div class="card"><span class="st ${cls}"></span><div><div class="nm">${k}</div><div class="cd"><b>${label}</b></div></div></div>`);
+  }
+  document.getElementById('st-lanes').textContent = names.length;
+  document.getElementById('st-up').textContent = up;
+  const upd = document.getElementById('st-up'); upd.className = 'stat ' + (up === names.length ? 'ok' : up ? 'warn' : 'down');
+}
+
+function renderRoster(){
+  const g = document.getElementById('roster');
+  g.innerHTML = '';
+  ROSTER.forEach(r => {
+    g.insertAdjacentHTML('beforeend',
+      `<div class="card"><span class="st ${r.b === 'ok' ? 'up' : r.b === 'sig' ? 'flaky' : 'none'}"></span>` +
+      `<div><div class="nm">${r.n}</div><div class="cd">${r.d}</div></div></div>`);
+  });
+  document.getElementById('st-wired').textContent = ROSTER.filter(r => r.b === 'ok').length;
+}
+
+function renderQueue(){
+  const g = document.getElementById('queue');
+  const key = 'hq-queue-v1';
+  let done = {}; try{ done = JSON.parse(localStorage.getItem(key) || '{}'); }catch(e){}
+  g.innerHTML = '';
+  QUEUE.forEach((q, i) => {
+    const isDone = !!done[i];
+    g.insertAdjacentHTML('beforeend',
+      `<div class="qitem ${isDone ? 'done' : ''}">` +
+      `<input type="checkbox" ${isDone ? 'checked' : ''} onchange="toggleQ(${i})">` +
+      `<div><b>${q.n}</b><p>${q.d}</p></div></div>`);
+  });
+  document.getElementById('st-sig').textContent = QUEUE.length;
+  window.toggleQ = function(i){
+    let d = {}; try{ d = JSON.parse(localStorage.getItem(key) || '{}'); }catch(e){}
+    d[i] = !d[i]; localStorage.setItem(key, JSON.stringify(d)); renderQueue();
+  };
+}
+
+renderRoster(); renderQueue(); loadHealth();
+
+// PWA: register SW (production only — localhost/file is fine to skip) + install prompt
+if (location.protocol === 'https:' || location.hostname === 'localhost') {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    const b = document.createElement('button');
+    b.textContent = '⬇ install app';
+    b.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:9;background:var(--accent);color:#010102;border:none;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700';
+    b.onclick = async () => { deferredPrompt.prompt(); await deferredPrompt.userChoice; b.remove(); };
+    document.body.appendChild(b);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "Free-Stack HQ",
+  "short_name": "FS-HQ",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#010102",
+  "theme_color": "#5e6ad2",
+  "description": "Command center — free credits, engines, lanes.",
+  "icons": [
+    { "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23010102'/%3E%3Ccircle cx='96' cy='96' r='46' fill='none' stroke='%235e6ad2' stroke-width='10'/%3E%3Ccircle cx='96' cy='96' r='14' fill='%235e6ad2'/%3E%3C/svg%3E",
+      "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
