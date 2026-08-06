@@ -8,7 +8,7 @@ OUT = r'C:\Users\margo\.easyclaw\workspace\free-stack-hq\health.json'
 def vault(name):
     r = subprocess.run(['powershell', '-NoProfile', '-ExecutionPolicy', 'Bypass',
         '-File', r'C:\Users\margo\.easyclaw\workspace\scripts\vault.ps1',
-        '-Action', 'get', '-Name', name], capture_output=True, text=True, timeout=30)
+        '-Action', 'get', '-Name', name], capture_output=True, text=True, timeout=90)
     return r.stdout.strip().splitlines()[-1] if r.stdout.strip() else ''
 
 def groq_key():
